@@ -1,0 +1,68 @@
+name: Build kernel
+
+on:
+  workflow_dispatch:
+    inputs:
+      ksu_ref:
+        description: "Branch atau commit KernelSU-Next (kosongkan = pakai versi yang sudah terpasang di repo)"
+        required: false
+        default: ""
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - name: Checkout (termasuk submodule)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Pakai versi KernelSU-Next tertentu (opsional)
+        if: ${{ inputs.ksu_ref != '' }}
+        env:
+          KSU_REF: ${{ inputs.ksu_ref }}
+        run: |
+          cd KernelSU
+          git fetch --depth=1 origin "$KSU_REF"
+          git checkout FETCH_HEAD
+          git log -1 --format='KernelSU-Next: %h %ad %s' --date=short
+
+      - name: Pasang dependensi build
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc bison flex libssl-dev libelf-dev \
+            cpio zip lz4 xz-utils python3 device-tree-compiler \
+            gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu gcc-arm-linux-gnueabi
+
+      - name: Pasang Clang 21
+        run: |
+          wget -q https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 21
+          sudo apt-get install -y llvm-21 lld-21
+          mkdir -p clang
+          ln -sfn /usr/lib/llvm-21/bin clang/bin
+          clang/bin/clang --version | head -1
+          clang/bin/ld.lld --version | head -1
+
+      - name: Build kernel
+        shell: bash
+        run: bash build_kernel.sh 2>&1 | tee build.log
+
+      - name: Unggah zip hasil build
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-m32-zip
+          path: AnyKernel3-*.zip
+          if-no-files-found: error
+
+      - name: Unggah log build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          retention-days: 3
+          if-no-files-found: ignore
