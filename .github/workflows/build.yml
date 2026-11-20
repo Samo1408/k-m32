@@ -24,10 +24,10 @@ jobs:
         env:
           KSU_REF: ${{ inputs.ksu_ref }}
         run: |
-          cd KernelSU
+          cd FinaSU
           git fetch --depth=1 origin "$KSU_REF"
           git checkout FETCH_HEAD
-          git log -1 --format='KernelSU-Next: %h %ad %s' --date=short
+          git log -1 --format='FinaSU: %h %ad %s' --date=short
 
       - name: Pasang dependensi build
         run: |
