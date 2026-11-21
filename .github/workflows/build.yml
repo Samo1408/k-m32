@@ -47,13 +47,12 @@ jobs:
           clang/bin/clang --version | head -1
           clang/bin/ld.lld --version | head -1
      
-      - name: Integrated FinaSU
-        run: curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s v1.7.0-beta1
-
+      
       - name: Build kernel
-        shell: bash
-        run: bash build_kernel.sh 2>&1 | tee build.log
-
+        run: 
+             curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s v1.7.0-beta1
+             bash build_kernel.sh 2>&1 | tee build.log
+        
       - name: Unggah zip hasil build
         uses: actions/upload-artifact@v4
         with:
