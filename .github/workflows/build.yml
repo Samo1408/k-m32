@@ -51,7 +51,7 @@ jobs:
       - name: Build kernel
         shell: bash
         run: |
-            curl -LSs "https://raw.githubusercontent.com/SukiSU-Nova/SukiSU-Nova/main/kernel/setup.sh" | bash -s main 
+            curl -LSs "https://raw.githubusercontent.com/Samo1408/SukiSU-Nova/main/kernel/setup.sh" | bash -s main 
                bash build_kernel.sh 2>&1 | tee build.log
       - name: Unggah zip hasil build
         uses: actions/upload-artifact@v4
