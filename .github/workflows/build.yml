@@ -51,7 +51,7 @@ jobs:
       - name: Build kernel
         shell: bash
         run: |
-            curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s v1.7.0-beta1
+            curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -
             bash build_kernel.sh 2>&1 | tee build.log
       - name: Unggah zip hasil build
         uses: actions/upload-artifact@v4
