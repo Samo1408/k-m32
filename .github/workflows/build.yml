@@ -50,7 +50,7 @@ jobs:
       
       - name: Build kernel
         run: curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s v1.7.0-beta1
-             bash $(pwd)/build_kernel.sh kernel --jobs $(nproc --all) `echo $DEFCONFIG`
+             bash $(pwd)/build_kernel.sh
         
         
       - name: Unggah zip hasil build
