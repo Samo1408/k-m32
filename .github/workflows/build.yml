@@ -48,7 +48,7 @@ jobs:
           clang/bin/ld.lld --version | head -1
      
       - name: Integrated FinaSU
-        run: curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s dev
+        run: curl -LSs "https://raw.githubusercontent.com/LyraVoid/FinaSU/dev/kernel/setup.sh" | bash -s v1.7.0-beta1
 
       - name: Build kernel
         shell: bash
