@@ -36,22 +36,22 @@ MAKE_FLAGS=(
     "KCFLAGS=-w -O2 -mcpu=cortex-a75 -mtune=cortex-a75 -fno-plt -fno-semantic-interposition -pipe"
     "CONFIG_SECTION_MISMATCH_WARN_ONLY=y"
 )
-curl -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" | bash
-git add . && git commit -am "drivers: KernelSU"
-SUKI_DIR="$(pwd)/drivers/kernelsu"
-KSU_git_ver=$(cd $SUKI_DIR && git rev-list --count HEAD)
-KSU_ver=$KSU_git_ver
+#curl -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" | bash
+#git add . && git commit -am "drivers: KernelSU"
+#SUKI_DIR="$(pwd)/drivers/kernelsu"
+#KSU_git_ver=$(cd $SUKI_DIR && git rev-list --count HEAD)
+#KSU_ver=$KSU_git_ver
 
 patchesdir="$(pwd)/ksu/sus/"
-patch_sus1=$patchesdir/susfs_patch_to_4.14.patch
-patch_sus2=$patchesdir/sukisu_ultra_fixed.patch
+#patch_sus1=$patchesdir/susfs_patch_to_4.14.patch
+#patch_sus2=$patchesdir/sukisu_ultra_fixed.patch
 #if [[ -d "$patchesdir" ]]; then
  # for patch_sus in "$patchesdir"/susfs_patch_to_4.14.patch
     #patch -p1 < "$patch_sus1"
    # patch -p1 < "$patch_sus2"
   #done
 #else
-  echo "patching ksu successfully, the kernel version you want to patch have patched"
+  #echo "patching ksu successfully, the kernel version you want to patch have patched"
   #exit 1
 #fi
 echo "[i] Linker forced to absolute path: $CLANG_BIN/ld.lld"
