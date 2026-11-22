@@ -1,0 +1,56 @@
+#!/bin/bash
+#
+# config and common vars
+
+export maindir="$(pwd)"
+export outside="${maindir}/.."
+
+#
+
+export ARCH="arm64"
+export SUBARCH="arm64"
+export KBUILD_BUILD_USER="MrGadget84"
+export KBUILD_BUILD_HOST="github"
+
+export defconfig="m32_defconfig"
+
+if [[ -z "$zipper_repo" ]]; then
+  export zipper_repo="https://github.com/MrGadget84/AnyKernel3"
+fi
+if [[ -z "$zipper_branch" ]]; then
+  export zipper_branch=m32
+fi
+
+export out_image="${maindir}/out/arch/${ARCH}/boot/Image.gz"
+export out_dtb="${maindir}/out/arch/${ARCH}/boot/dtb"
+export out_dtbo="${maindir}/out/arch/${ARCH}/boot/dtbo.img"
+
+export zipper="${outside}/zipper"
+
+#
+
+export defconfig_file="${maindir}/arch/${ARCH}/configs/${defconfig}"
+
+if [ ! -f "${defconfig_file}" ]; then
+  configs_dir="${maindir}/arch/${ARCH}/configs"
+
+  if [ -f "${configs_dir}/mt6768-unifiedk414_lineage_defconfig" ] && [ -f "${configs_dir}/m32_defconfig" ]; then
+    echo "Generating M32 defconfig from modular MT6768 config..."
+    cat "${configs_dir}/mt6768-unifiedk414_lineage_defconfig" "${configs_dir}/m32_defconfig" > "${defconfig_file}"
+  elif [ -f "${configs_dir}/m32_defconfig" ] && [ -f "${configs_dir}/m32_defconfig" ]; then
+    echo "Generating M32 defconfig from LumiROM base config..."
+    cat "${configs_dir}/m32_defconfig" "${configs_dir}/m32_defconfig" > "${defconfig_file}"
+  fi
+fi
+
+if [ ! -f "${defconfig_file}" ]; then
+  echo "ERROR: M32 defconfig not found: ${defconfig_file}" >&2
+  exit 1
+fi
+
+export kernel_head="$(git log --pretty=format:'%h' -1)"
+export kernel_name=$(grep '^CONFIG_LOCALVERSION=' "${defconfig_file}" | tail -n1 | sed -e 's/^CONFIG_LOCALVERSION="//' -e 's/"$//' -e 's/^-//')
+export kernel_ver="$(make kernelversion)"
+export TIME=$(date +"%y%m%d-%H%M")
+
+export zip_name="${maindir}/${kernel_name}${SUFFIX}-${TIME}-${kernel_head}.zip"
