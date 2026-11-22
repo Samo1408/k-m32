@@ -21,13 +21,11 @@
 #include <linux/mount.h>
 #include <linux/fs.h>
 #include "internal.h"
-
+#ifdef CONFIG_KSU
+#include <linux/jump_label.h>
+#endif
 #include <linux/uaccess.h>
 #include <asm/unistd.h>
-
-#ifdef CONFIG_SECURITY_DEFEX
-#include <linux/defex.h>
-#endif
 
 #ifdef CONFIG_FSCRYPT_SDP
 #include <linux/fscrypto_sdp_cache.h>
@@ -412,9 +410,11 @@ static ssize_t new_sync_read(struct file *filp, char __user *buf, size_t len, lo
 	return ret;
 }
 
+
 ssize_t __vfs_read(struct file *file, char __user *buf, size_t count,
 		   loff_t *pos)
 {
+
 	if (file->f_op->read)
 		return file->f_op->read(file, buf, count, pos);
 	else if (file->f_op->read_iter)
@@ -437,19 +437,10 @@ ssize_t kernel_read(struct file *file, void *buf, size_t count, loff_t *pos)
 }
 EXPORT_SYMBOL(kernel_read);
 
-#ifdef CONFIG_KSU
-extern bool ksu_vfs_read_hook __read_mostly;
-extern int ksu_handle_vfs_read(struct file **file_ptr, char __user **buf_ptr,
-			size_t *count_ptr, loff_t **pos);
-#endif
 ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;
 
-#ifdef CONFIG_KSU 
-	if (unlikely(ksu_vfs_read_hook))
-		ksu_handle_vfs_read(&file, &buf, &count, &pos);
-#endif
 	if (!(file->f_mode & FMODE_READ))
 		return -EBADF;
 	if (!(file->f_mode & FMODE_CAN_READ))
@@ -574,10 +565,6 @@ ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_
 
 	ret = rw_verify_area(WRITE, file, pos, count);
 	if (!ret) {
-#ifdef CONFIG_SECURITY_DEFEX
-		if (task_defex_enforce(current, file, -__NR_write))
-			return -EPERM;
-#endif
 		if (count > MAX_RW_COUNT)
 			count =  MAX_RW_COUNT;
 		file_start_write(file);
@@ -606,22 +593,20 @@ static inline void file_pos_write(struct file *file, loff_t pos)
 		file->f_pos = pos;
 }
 
-#ifdef CONFIG_KSU_MANUAL_HOOK
-extern bool ksu_init_rc_hook __read_mostly;
+#ifdef CONFIG_KSU
+extern struct static_key_true ksu_is_init_rc_hook_enabled;
 extern __attribute__((cold)) int ksu_handle_sys_read(unsigned int fd,
 				char __user **buf_ptr, size_t *count_ptr);
 #endif
-
 SYSCALL_DEFINE3(read, unsigned int, fd, char __user *, buf, size_t, count)
 {
 	struct fd f = fdget_pos(fd);
 	ssize_t ret = -EBADF;
 
-#ifdef CONFIG_KSU_MANUAL_HOOK
-	if (unlikely(ksu_init_rc_hook)) 
+#ifdef CONFIG_KSU
+	if (static_branch_unlikely(&ksu_is_init_rc_hook_enabled)) 
 		ksu_handle_sys_read(fd, &buf, &count);
 #endif
-
 	if (f.file) {
 		loff_t pos = file_pos_read(f.file);
 		ret = vfs_read(f.file, buf, count, &pos);
