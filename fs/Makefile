@@ -15,6 +15,7 @@ obj-y :=	open.o read_write.o file_table.o super.o \
 		pnode.o splice.o sync.o utimes.o \
 		stack.o fs_struct.o statfs.o fs_pin.o nsfs.o
 
+
 obj-$(CONFIG_KSU_SUSFS) += susfs.o
 
 ifeq ($(CONFIG_BLOCK),y)
@@ -83,6 +84,7 @@ obj-y				+= ramfs/
 obj-$(CONFIG_HUGETLBFS)		+= hugetlbfs/
 obj-$(CONFIG_CODA_FS)		+= coda/
 obj-$(CONFIG_MINIX_FS)		+= minix/
+obj-$(CONFIG_EXFAT_FS)       	+= exfat/
 obj-$(CONFIG_FAT_FS)		+= fat/
 obj-$(CONFIG_SDFAT_FS)		+= sdfat/
 obj-$(CONFIG_BFS_FS)		+= bfs/
