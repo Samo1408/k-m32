@@ -19,16 +19,7 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
-      - name: Pakai versi KernelSU tertentu (opsional)
-        if: ${{ inputs.ksu_ref != '' }}
-        env:
-          KSU_REF: ${{ inputs.ksu_ref }}
-        run: |
-          cd FinaSU
-          git fetch --depth=1 origin "$KSU_REF"
-          git checkout FETCH_HEAD
-          git log -1 --format='FinaSU: %h %ad %s' --date=short
-
+      
       - name: Pasang dependensi build
         run: |
           sudo apt-get update
@@ -60,11 +51,4 @@ jobs:
           path: AnyKernel3-*.zip
           if-no-files-found: error
 
-      - name: Unggah log build
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build.log
-          retention-days: 3
-          if-no-files-found: ignore
+      
