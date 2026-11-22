@@ -4,7 +4,7 @@
 
 export maindir="$(pwd)"
 export outside="${maindir}/.."
-source "${outside}/$1env"
+#source "${outside}/$1env"
 
 curl -LSs "https://raw.githubusercontent.com/MrGadget84/MySukiSU/main/kernel/setup.sh" | bash
 git add . && git commit -am "drivers: KernelSU"
