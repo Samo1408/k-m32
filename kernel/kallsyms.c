@@ -12,6 +12,7 @@
  *      compression (see scripts/kallsyms.c for a more complete description)
  */
 #include <linux/kallsyms.h>
+#include <linux/security.h>
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/seq_file.h>
