@@ -38,11 +38,11 @@ MAKE_FLAGS=(
 )
 curl -LSs "https://raw.githubusercontent.com/MrGadget84/MySukiSU/main/kernel/setup.sh" | bash
 git add . && git commit -am "drivers: KernelSU"
-SUKI_DIR="$(pwd)/out/drivers/kernelsu"
+SUKI_DIR="$(pwd)/drivers/kernelsu"
 KSU_git_ver=$(cd $SUKI_DIR && git rev-list --count HEAD)
 KSU_ver=$KSU_git_ver
 
-patchesdir="$(pwd)/out/ksu/hooks/"
+patchesdir="$(pwd)/ksu/hooks/"
 
 if [[ -d "$patchesdir" ]]; then
   for patch_file in "$patchesdir"/suki-kernel-4.14.patch ; do
