@@ -36,7 +36,7 @@ MAKE_FLAGS=(
     "KCFLAGS=-w -O2 -mcpu=cortex-a75 -mtune=cortex-a75 -fno-plt -fno-semantic-interposition -pipe"
     "CONFIG_SECTION_MISMATCH_WARN_ONLY=y"
 )
-curl -LSs "https://raw.githubusercontent.com/MrGadget84/MySukiSU/main/kernel/setup.sh" | bash
+curl -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/main/kernel/setup.sh" | bash
 git add . && git commit -am "drivers: KernelSU"
 SUKI_DIR="$(pwd)/drivers/kernelsu"
 KSU_git_ver=$(cd $SUKI_DIR && git rev-list --count HEAD)
