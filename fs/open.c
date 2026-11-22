@@ -363,9 +363,10 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
  * We do this by temporarily clearing all FS-related capabilities and
  * switching the fsuid/fsgid around to the real ones.
  */
-#ifdef CONFIG_KSU
-extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,
-			 int *flags);
+#ifdef CONFIG_KSU_MANUAL_HOOK
+__attribute__((hot)) 
+extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user,
+				int *mode, int *flags);
 #endif
 SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
 {
@@ -377,8 +378,7 @@ SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
 	int res;
 	unsigned int lookup_flags = LOOKUP_FOLLOW;
 
-
-#ifdef CONFIG_KSU
+#ifdef CONFIG_KSU_MANUAL_HOOK
 	ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
 #endif
 
@@ -1277,28 +1277,3 @@ int stream_open(struct inode *inode, struct file *filp)
 }
 
 EXPORT_SYMBOL(stream_open);
-
-/* BACKPORT: sys_close_range (Kernel 5.9+) para estabilidade OneUI 8.5 */
-SYSCALL_DEFINE3(close_range, unsigned int, fd, unsigned int, max_fd, unsigned int, flags)
-{
-    struct files_struct *files = current->files;
-    struct fdtable *fdt;
-    unsigned int i;
-    if (flags & ~(0U)) return -EINVAL;
-    if (fd > max_fd) return -EINVAL;
-    spin_lock(&files->file_lock);
-    fdt = files_fdtable(files);
-    if (max_fd >= fdt->max_fds) max_fd = fdt->max_fds - 1;
-    for (i = fd; i <= max_fd; i++) {
-        struct file *file = fdt->fd[i];
-        if (file) {
-            __clear_bit(i, fdt->open_fds);
-            __clear_bit(i, fdt->close_on_exec);
-            spin_unlock(&files->file_lock);
-            filp_close(file, files);
-            spin_lock(&files->file_lock);
-        }
-    }
-    spin_unlock(&files->file_lock);
-    return 0;
-}
