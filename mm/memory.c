@@ -85,6 +85,10 @@
 #include <linux/io_record.h>
 #endif
 
+#ifdef CONFIG_KSU_SUSFS_SUS_MAP
+#include <linux/susfs_def.h>
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MAP
+
 #include "internal.h"
 
 #ifdef CONFIG_SPECULATIVE_PAGE_FAULT
@@ -501,7 +505,7 @@ static void free_pte_range(struct mmu_gather *tlb, pmd_t *pmd,
 	pgtable_t token = pmd_pgtable(*pmd);
 	pmd_clear(pmd);
 	pte_free_tlb(tlb, token, addr);
-	atomic_long_dec(&tlb->mm->nr_ptes);
+	mm_dec_nr_ptes(tlb->mm);
 }
 
 static inline void free_pmd_range(struct mmu_gather *tlb, pud_t *pud,
@@ -569,6 +573,7 @@ static inline void free_pud_range(struct mmu_gather *tlb, p4d_t *p4d,
 	pud = pud_offset(p4d, start);
 	p4d_clear(p4d);
 	pud_free_tlb(tlb, pud, start);
+	mm_dec_nr_puds(tlb->mm);
 }
 
 static inline void free_p4d_range(struct mmu_gather *tlb, pgd_t *pgd,
@@ -732,7 +737,7 @@ int __pte_alloc(struct mm_struct *mm, pmd_t *pmd, unsigned long address)
 
 	ptl = pmd_lock(mm, pmd);
 	if (likely(pmd_none(*pmd))) {	/* Has another populated it ? */
-		atomic_long_inc(&mm->nr_ptes);
+		mm_inc_nr_ptes(mm);
 		pmd_populate(mm, pmd, new);
 		new = NULL;
 	}
@@ -3628,7 +3633,7 @@ static int pte_alloc_one_map(struct vm_fault *vmf)
 			goto map_pte;
 		}
 
-		atomic_long_inc(&vma->vm_mm->nr_ptes);
+		mm_inc_nr_ptes(vma->vm_mm);
 		pmd_populate(vma->vm_mm, vmf->pmd, vmf->prealloc_pte);
 		spin_unlock(vmf->ptl);
 		vmf->prealloc_pte = NULL;
@@ -3688,7 +3693,7 @@ static void deposit_prealloc_pte(struct vm_fault *vmf)
 	 * We are going to consume the prealloc table,
 	 * count that as nr_ptes.
 	 */
-	atomic_long_inc(&vma->vm_mm->nr_ptes);
+	mm_inc_nr_ptes(vma->vm_mm);
 	vmf->prealloc_pte = NULL;
 }
 
@@ -3994,13 +3999,11 @@ static int do_read_fault(struct vm_fault *vmf)
 	 * something).
 	 */
 	if (vma->vm_ops->map_pages && fault_around_bytes >> PAGE_SHIFT > 1) {
-		ret = do_fault_around(vmf);
-		if (ret)
-			return ret;
-#ifdef CONFIG_PAGE_BOOST_RECORDING
-	} else if (vma->vm_ops->map_pages && fault_around_bytes >> PAGE_SHIFT == 1) {
-		record_io_info(vma->vm_file, vmf->pgoff, 1);
-#endif
+		if (likely(!userfaultfd_minor(vmf->vma))) {
+			ret = do_fault_around(vmf);
+			if (ret)
+				return ret;
+		}
 	}
 
 	ret = __do_fault(vmf);
@@ -4867,15 +4870,17 @@ int __pud_alloc(struct mm_struct *mm, p4d_t *p4d, unsigned long address)
 
 	spin_lock(&mm->page_table_lock);
 #ifndef __ARCH_HAS_5LEVEL_HACK
-	if (p4d_present(*p4d))		/* Another has populated it */
-		pud_free(mm, new);
-	else
+	if (!p4d_present(*p4d)) {
+		mm_inc_nr_puds(mm);
 		p4d_populate(mm, p4d, new);
-#else
-	if (pgd_present(*p4d))		/* Another has populated it */
+	} else	/* Another has populated it */
 		pud_free(mm, new);
-	else
+#else
+	if (!pgd_present(*p4d)) {
+		mm_inc_nr_puds(mm);
 		pgd_populate(mm, p4d, new);
+	} else	/* Another has populated it */
+		pud_free(mm, new);
 #endif /* __ARCH_HAS_5LEVEL_HACK */
 	spin_unlock(&mm->page_table_lock);
 	return 0;
@@ -5106,11 +5111,19 @@ int __access_remote_vm(struct task_struct *tsk, struct mm_struct *mm,
 	int write = gup_flags & FOLL_WRITE;
 
 	down_read(&mm->mmap_sem);
+#ifdef CONFIG_KSU_SUSFS_SUS_MAP
+	vma = find_vma(mm, addr);
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 	/* ignore errors, just check how much was successfully transferred */
 	while (len) {
 		int bytes, ret, offset;
 		void *maddr;
 		struct page *page = NULL;
+
+#ifdef CONFIG_KSU_SUSFS_SUS_MAP
+		if (vma && vma->vm_file && SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file)))
+			break;
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 
 		ret = get_user_pages_remote(tsk, mm, addr, 1,
 				gup_flags, &page, &vma, NULL);
