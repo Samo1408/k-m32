@@ -42,16 +42,17 @@ SUKI_DIR="$(pwd)/drivers/kernelsu"
 KSU_git_ver=$(cd $SUKI_DIR && git rev-list --count HEAD)
 KSU_ver=$KSU_git_ver
 
-patchesdir="$(pwd)/ksu/hooks/"
+patchesdir="$(pwd)/ksu/sus/"
 
-if [[ -d "$patchesdir" ]]; then
-  for patch_file in "$patchesdir"/suki-kernel-4.14.patch ; do
-    patch -p1 < "$patch_file"
-  done
-else
-  echo "patching ksu failed, the kernel version you want to patch doesnt have patches here yet"
-  exit 1
-fi
+#if [[ -d "$patchesdir" ]]; then
+ # for patch_file in "$patchesdir"/susfs_patch_to_4.14.patch ; do
+    patch -p1 < "susfs_patch_to_4.14.patch"
+    patch -p1 < "sukisu_ultra_fixed.patch"
+  #done
+#else
+  echo "patching ksu successfully, the kernel version you want to patch have patched"
+  #exit 1
+#fi
 echo "[i] Linker forced to absolute path: $CLANG_BIN/ld.lld"
 
 # ==========================================================
