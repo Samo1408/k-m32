@@ -1785,7 +1785,9 @@ union thread_union {
 extern struct thread_info init_thread_info;
 #endif
 
+#ifndef init_stack
 extern unsigned long init_stack[THREAD_SIZE / sizeof(unsigned long)];
+#endif
 
 #ifdef CONFIG_THREAD_INFO_IN_TASK
 static inline struct thread_info *task_thread_info(struct task_struct *task)
