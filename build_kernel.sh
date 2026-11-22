@@ -43,11 +43,12 @@ KSU_git_ver=$(cd $SUKI_DIR && git rev-list --count HEAD)
 KSU_ver=$KSU_git_ver
 
 patchesdir="$(pwd)/ksu/sus/"
-
+patch_sus1=$patchesdir/susfs_patch_to_4.14.patch
+patch_sus2=$patchesdir/sukisu_ultra_fixed.patch
 #if [[ -d "$patchesdir" ]]; then
- # for patch_file in "$patchesdir"/susfs_patch_to_4.14.patch ; do
-    patch -p1 < "susfs_patch_to_4.14.patch"
-    patch -p1 < "sukisu_ultra_fixed.patch"
+ # for patch_sus in "$patchesdir"/susfs_patch_to_4.14.patch
+    patch -p1 < "$patch_sus1"
+    patch -p1 < "$patch_sus2"
   #done
 #else
   echo "patching ksu successfully, the kernel version you want to patch have patched"
