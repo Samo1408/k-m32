@@ -47,8 +47,8 @@ patch_sus1=$patchesdir/susfs_patch_to_4.14.patch
 patch_sus2=$patchesdir/sukisu_ultra_fixed.patch
 #if [[ -d "$patchesdir" ]]; then
  # for patch_sus in "$patchesdir"/susfs_patch_to_4.14.patch
-    patch -p1 < "$patch_sus1"
-    patch -p1 < "$patch_sus2"
+    #patch -p1 < "$patch_sus1"
+   # patch -p1 < "$patch_sus2"
   #done
 #else
   echo "patching ksu successfully, the kernel version you want to patch have patched"
